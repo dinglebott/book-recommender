@@ -143,9 +143,25 @@ export interface UpdateBookInput {
   id: number;
   notes?: string | null;
   rating?: number | null;
+  description?: string | null;
+  subjects?: string[];
 }
 
-/** Updates notes and/or rating. Returns the updated record, or null if not found. */
+/** complete = description + subjects both present; partial = one; not_found = neither. */
+function deriveStatus(description: string | null, subjects: string[]): EnrichmentStatus {
+  const hasDesc = !!description && description.trim() !== "";
+  const hasSubjects = subjects.length > 0;
+  if (hasDesc && hasSubjects) return "complete";
+  if (hasDesc || hasSubjects) return "partial";
+  return "not_found";
+}
+
+/**
+ * Updates notes, rating, description, and/or subjects. Returns the updated record,
+ * or null if not found. When description or subjects is manually edited, the
+ * enrichment_status is recomputed from the resulting fields so books filled in by
+ * hand stop reading as "not_found".
+ */
 export function updateBook(input: UpdateBookInput): BookRecord | null {
   const existing = getBook(input.userId, input.id);
   if (!existing) return null;
@@ -160,6 +176,24 @@ export function updateBook(input: UpdateBookInput): BookRecord | null {
     sets.push("rating = @rating");
     params.rating = input.rating;
   }
+  if (input.description !== undefined) {
+    sets.push("description = @description");
+    params.description = input.description;
+  }
+  if (input.subjects !== undefined) {
+    sets.push("subjects = @subjects");
+    params.subjects = JSON.stringify(input.subjects);
+  }
+
+  if (input.description !== undefined || input.subjects !== undefined) {
+    const finalDescription =
+      input.description !== undefined ? input.description : existing.description;
+    const finalSubjects =
+      input.subjects !== undefined ? input.subjects : existing.subjects;
+    sets.push("enrichment_status = @enrichment_status");
+    params.enrichment_status = deriveStatus(finalDescription, finalSubjects);
+  }
+
   if (sets.length === 0) return existing;
 
   db.prepare(

@@ -54,6 +54,8 @@ Claude app  ──MCP / Streamable HTTP──▶  this server (Railway)
 ## The 6 MCP tools
 `add_book`, `get_reading_profile`, `lookup_book`, `search_books`, `update_book`, `remove_book`. All are user-scoped — a token can only ever read/write its own rows. There is intentionally **no bulk-delete / wipe tool**; deletion is one record at a time.
 
+`update_book` writes `notes`, `rating`, `description`, and `subjects` (only the fields passed). It does **not** re-fetch from the external APIs — `description`/`subjects` are for manually filling records that enrichment missed. Editing either of those recomputes `enrichment_status` from the resulting fields (`deriveStatus` in [src/db.ts](src/db.ts)): both present → `complete`, one → `partial`, neither → `not_found`.
+
 ## Auth & multi-user
 Pre-shared tokens, no OAuth. `VALID_TOKENS` is a comma-separated allowlist; add to grant, remove to revoke. `user_id` is the SHA-256 of the token — **only the hash is ever stored or logged, never the raw token.**
 

@@ -163,29 +163,48 @@ export function buildServer(userId: string): McpServer {
   server.registerTool(
     "update_book",
     {
-      title: "Update notes or rating on a stored book",
+      title: "Update fields on a stored book",
       description:
-        "Update the notes and/or rating on an existing reading-list record, identified " +
-        "by its id (from get_reading_profile). Does not re-fetch metadata.",
+        "Update fields on an existing reading-list record, identified by its id (from " +
+        "get_reading_profile). Set notes and/or rating, and also fill in description or " +
+        "subjects (theme tags) when enrichment failed to populate them (enrichment_status " +
+        "of 'partial' or 'not_found'). Editing description/subjects recomputes " +
+        "enrichment_status. Only the fields you pass are changed; this does not re-fetch " +
+        "metadata from the external APIs.",
       inputSchema: {
         id: z.union([z.string(), z.number()]).describe("The record id to update."),
         notes: z.string().optional().describe("New free-text notes."),
         rating: z.number().optional().describe("New rating from 1 to 10."),
+        description: z
+          .string()
+          .optional()
+          .describe("New description/summary (use to fill in a missing description)."),
+        subjects: z
+          .array(z.string())
+          .optional()
+          .describe("New subject/theme tags, replacing the existing list."),
       },
     },
-    async ({ id, notes, rating }) => {
+    async ({ id, notes, rating, description, subjects }) => {
       const numericId = Number(id);
       if (!Number.isInteger(numericId)) {
         return errorResult(`Invalid id: ${id}`);
       }
-      if (notes === undefined && rating === undefined) {
-        return errorResult("Provide notes and/or rating to update.");
+      if (
+        notes === undefined &&
+        rating === undefined &&
+        description === undefined &&
+        subjects === undefined
+      ) {
+        return errorResult("Provide at least one field to update (notes, rating, description, or subjects).");
       }
       const updated = updateBook({
         userId,
         id: numericId,
         notes,
         rating: rating === undefined ? undefined : normalizeRating(rating),
+        description,
+        subjects,
       });
       if (!updated) {
         return errorResult(`No book with id ${numericId} in your list.`);
