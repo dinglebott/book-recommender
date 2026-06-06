@@ -1,0 +1,39 @@
+{
+  "name": "book-recommender",
+  "version": "1.0.0",
+  "description": "A remote MCP server that grounds Claude's book recommendations in real metadata from Google Books and Open Library, and persists a per-user reading list.",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinglebott/book-recommender.git"
+  },
+  "keywords": ["mcp", "books", "recommendations", "claude"],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dinglebott/book-recommender/issues"
+  },
+  "homepage": "https://github.com/dinglebott/book-recommender#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "better-sqlite3": "^12.10.0",
+    "express": "^5.2.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.2",
+    "typescript": "^6.0.3"
+  }
+}
