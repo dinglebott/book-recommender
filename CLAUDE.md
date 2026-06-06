@@ -57,6 +57,8 @@ Claude app  ──MCP / Streamable HTTP──▶  this server (Railway)
 ## Auth & multi-user
 Pre-shared tokens, no OAuth. `VALID_TOKENS` is a comma-separated allowlist; add to grant, remove to revoke. `user_id` is the SHA-256 of the token — **only the hash is ever stored or logged, never the raw token.**
 
+The token reaches the server three ways ([src/auth.ts](src/auth.ts) `extractToken`, in priority order): `Authorization: Bearer <token>` header, `X-User-Token` header, or **`?token=<token>` query param**. The query param matters because **Claude's custom-connector UI only supports OAuth or no-auth — it cannot set custom headers**, so in practice each user embeds their token in the connector URL: `https://<app>.up.railway.app/mcp?token=<their-token>`. This diverges from `design_spec.md` §7, which assumed header support. Never log the full request URL (it carries the token); current code logs neither URLs nor tokens.
+
 ## Deployment (Railway)
 - `railway.json` pins NIXPACKS, `npm run build` → `npm start`, healthcheck `/health`.
 - Mount a **persistent volume at `/data`** and set `DATABASE_PATH=/data/reading_list.db` so the list survives redeploys.

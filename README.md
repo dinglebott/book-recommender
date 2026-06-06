@@ -19,6 +19,14 @@ You connect it to Claude as a custom connector. Each person uses their own secre
 - **Update** or **remove** entries.
 <br/>
 
+## Connecting to Claude
+In Claude → **Settings → Connectors → Add custom connector**, paste your server URL with your token in it:
+```
+https://your-app.up.railway.app/mcp?token=your-token
+```
+The token must be one of the values in `VALID_TOKENS`. Leave the OAuth fields blank — Claude's UI can't set custom headers, so the token rides in the URL. Treat that URL as a secret.\
+<br/>
+
 ## Running it
 ```bash
 npm install

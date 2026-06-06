@@ -26,8 +26,12 @@ function isKnownToken(token: string): boolean {
 }
 
 /**
- * Extracts the bearer token from a request, preferring the standard
- * `Authorization: Bearer <token>` header and falling back to `X-User-Token`.
+ * Extracts the token from a request. Order of preference:
+ *   1. `Authorization: Bearer <token>` header
+ *   2. `X-User-Token` header
+ *   3. `?token=<token>` query param
+ * The query param exists because Claude's custom-connector UI cannot set headers,
+ * so the token is embedded in the connector URL instead.
  */
 export function extractToken(req: IncomingMessage): string | null {
   const authHeader = req.headers["authorization"];
@@ -38,6 +42,13 @@ export function extractToken(req: IncomingMessage): string | null {
   const custom = req.headers["x-user-token"];
   if (typeof custom === "string" && custom.trim() !== "") {
     return custom.trim();
+  }
+  if (req.url) {
+    // req.url is path + query only; supply a dummy base so URL can parse it.
+    const queryToken = new URL(req.url, "http://localhost").searchParams.get("token");
+    if (queryToken && queryToken.trim() !== "") {
+      return queryToken.trim();
+    }
   }
   return null;
 }
